@@ -32,10 +32,10 @@ async function run() {
             else {
                 cursor = productCollection.find(query);
             }
-
             const products = await cursor.toArray();
             res.send(products);
         })
+
 
         // Create specific product API
         app.get('/products/:id', async (req, res) => {
@@ -45,6 +45,7 @@ async function run() {
             res.send(result);
         })
 
+        // Update stock api
         app.put('/updateStock/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
@@ -56,8 +57,14 @@ async function run() {
             const updateDoc = {
                 $set: newAmount
             }
-
             const result = await productCollection.updateOne(filter, updateDoc, options)
+            res.send(result);
+        })
+
+        // Add new item api
+        app.post('/addItem', async (req, res) => {
+            const doc = req.body;
+            const result = await productCollection.insertOne(doc);
             res.send(result);
         })
 
