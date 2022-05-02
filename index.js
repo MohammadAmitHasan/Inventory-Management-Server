@@ -45,7 +45,7 @@ async function run() {
             res.send(result);
         })
 
-        // Update stock api
+        // Update stock API
         app.put('/updateStock/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: ObjectId(id) }
@@ -61,13 +61,20 @@ async function run() {
             res.send(result);
         })
 
-        // Add new item api
+        // Add new item API
         app.post('/addItem', async (req, res) => {
             const doc = req.body;
             const result = await productCollection.insertOne(doc);
             res.send(result);
         })
 
+        // Delete an item API
+        app.delete('/deleteItem/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await productCollection.deleteOne(query)
+            res.send(result);
+        })
     }
     finally { }
 }
