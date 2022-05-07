@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 const ObjectId = require('mongodb').ObjectId;
+const jwt = require('jsonwebtoken');
 
 const app = express()
 require('dotenv').config()
@@ -20,6 +21,15 @@ async function run() {
         // Connect To database
         await client.connect();
         const productCollection = client.db('nim_database').collection('products');
+
+        // Auth
+        app.post('/login', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+                expiresIn: '1d',
+            })
+            res.send({ token })
+        })
 
         // Create all products API
         app.get('/products', async (req, res) => {
@@ -73,6 +83,15 @@ async function run() {
             const id = req.params.id;
             const query = { _id: ObjectId(id) }
             const result = await productCollection.deleteOne(query)
+            res.send(result);
+        })
+
+        // My Item API
+        app.get('/myItem', async (req, res) => {
+            const email = req.query.email;
+            const query = { userEmail: email }
+            const cursor = productCollection.find(query);
+            const result = await cursor.toArray();
             res.send(result);
         })
     }
