@@ -11,6 +11,23 @@ const port = process.env.PORT || 5000;
 app.use(cors())
 app.use(express.json())
 
+const verifyJWT = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(404).send({ Message: 'Unauthorized Access' })
+    }
+
+    // Get the token only
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ Message: 'Forbidden Access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
+
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const query = require('express/lib/middleware/query');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.mhdxq.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -87,12 +104,21 @@ async function run() {
         })
 
         // My Item API
-        app.get('/myItem', async (req, res) => {
+        app.get('/myItem', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
             const email = req.query.email;
-            const query = { userEmail: email }
-            const cursor = productCollection.find(query);
-            const result = await cursor.toArray();
-            res.send(result);
+
+            // Check the email with the decoded email
+            if (email === decodedEmail) {
+                const query = { userEmail: email }
+                const cursor = productCollection.find(query);
+                const result = await cursor.toArray();
+                console.log(result);
+                res.send(result);
+            }
+            else {
+                res.status(403).send({ Message: 'Forbidden Access' })
+            }
         })
     }
     finally { }
