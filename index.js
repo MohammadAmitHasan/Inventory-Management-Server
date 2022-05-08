@@ -38,6 +38,8 @@ async function run() {
         // Connect To database
         await client.connect();
         const productCollection = client.db('nim_database').collection('products');
+        const soldProductsCollection = client.db('nim_database').collection('soldProducts');
+        const newStockCollection = client.db('nim_database').collection('newStock');
 
         // Auth
         app.post('/login', async (req, res) => {
@@ -79,7 +81,6 @@ async function run() {
             const options = { upsert: true };
 
             const newAmount = req.body;
-            console.log(newAmount)
 
             const updateDoc = {
                 $set: newAmount
@@ -113,13 +114,40 @@ async function run() {
                 const query = { userEmail: email }
                 const cursor = productCollection.find(query);
                 const result = await cursor.toArray();
-                console.log(result);
                 res.send(result);
             }
             else {
                 res.status(403).send({ Message: 'Forbidden Access' })
             }
         })
+
+        // Last sold products
+        app.get('/soldProducts', async (req, res) => {
+            const amount = req.query.amount;
+            const query = {};
+            let cursor;
+            if (amount) {
+                cursor = soldProductsCollection.find(query).limit(+amount);
+            }
+            else {
+                cursor = soldProductsCollection.find(query);
+            }
+            const soldProducts = await cursor.toArray();
+            res.send(soldProducts);
+        })
+
+        // Add selling data to database
+        app.post('/sold', async (req, res) => {
+            const soldData = req.body;
+            const result = await soldProductsCollection.insertOne(soldData);
+            res.send(result);
+        })
+
+
+
+
+
+
     }
     finally { }
 }
