@@ -144,6 +144,29 @@ async function run() {
         })
 
 
+        // Last stock update
+        app.get('/stockUpdate', async (req, res) => {
+            const amount = req.query.amount;
+            const query = {};
+            let cursor;
+            if (amount) {
+                cursor = newStockCollection.find(query).limit(+amount);
+            }
+            else {
+                cursor = newStockCollection.find(query);
+            }
+            const soldProducts = await cursor.toArray();
+            res.send(soldProducts);
+        })
+
+        // Add stock update data to database
+        app.post('/stockUpdate', async (req, res) => {
+            const stockUpdateData = req.body;
+            const result = await newStockCollection.insertOne(stockUpdateData);
+            res.send(result);
+        })
+
+
 
 
 
